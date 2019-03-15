@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime/debug"
 	"strings"
 	"syscall"
 
@@ -44,6 +45,7 @@ func build(p problem) {
 
 	defer func() {
 		if err := recover(); err != nil {
+			debug.PrintStack()
 			log.Println(err)
 			log.Println("清理不必要的文件")
 			os.RemoveAll(p.Dir())
@@ -132,12 +134,11 @@ func Test_%s(t *testing.T) {
 	ast := assert.New(t)
 
 	for _, tc := range tcs {
-		fmt.Printf("~~%s~~\n", tc)
 		ast.Equal(tc.ans, %s(%s), "输入:%s", tc)
 	}
 }`
 	tcPara := getTcPara(para)
-	testFunc := fmt.Sprintf(testFuncFormat, fcName, `%v`, fcName, tcPara, `%v`)
+	testFunc := fmt.Sprintf(testFuncFormat, fcName, fcName, tcPara, `%v`)
 
 	benchFuncFormat := `
 func Benchmark_%s(b *testing.B) {
@@ -152,7 +153,6 @@ func Benchmark_%s(b *testing.B) {
 	fileFormat := `package %s
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
